@@ -1,0 +1,41 @@
+# Files that should never end up on the live WordPress server. The
+# GitHub Actions workflow (.github/workflows/deploy.yml) uses its own
+# `exclude` list and mirrors this file — keep them in sync when adding
+# anything new here.
+
+.git
+.git/
+.gitignore
+.gitattributes
+.github
+.github/
+.distignore
+.editorconfig
+
+tests
+tests/
+
+.idea
+.idea/
+.vscode
+.vscode/
+
+.DS_Store
+Thumbs.db
+*.log
+*.sqlite
+
+README.md
+readme.md
+CHANGELOG.md
+phpunit.xml
+phpunit.xml.dist
+composer.json
+composer.lock
+package.json
+package-lock.json
+yarn.lock
+node_modules
+node_modules/
+vendor
+vendor/

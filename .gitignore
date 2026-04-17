@@ -1,2 +1,20 @@
+# OS junk
 .DS_Store
+Thumbs.db
+
+# Logs / local state
 *.log
+*.sqlite
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependency manager artefacts (unused today, here for future-proofing)
+vendor/
+node_modules/
+composer.lock
+package-lock.json
+yarn.lock

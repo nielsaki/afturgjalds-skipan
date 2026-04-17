@@ -137,9 +137,11 @@ class AFS_Type_Driving extends AFS_Type {
         $html .= '<span class="afs-km-rate">(' . esc_html(number_format($rate, 2, ',', ' ')) . ' kr/km)</span>';
         $html .= '</label></p>';
 
-        $html .= '<p class="afs-km-input' . ($km_claim ? '' : ' afs-km-input--off') . '"><label>';
+        $html .= '<p class="afs-km-input"><label>';
         $html .= 'Koyrdir kilometrar<span class="afs-km-req"' . ($km_claim ? '' : ' hidden') . '> *</span><br>';
-        $html .= '<input type="number" step="0.1" min="0" name="afs_lines[' . $name_idx . '][km]" value="' . $km_val . '" placeholder="t.d. 12,5" data-afs-driving-km' . ($km_claim ? ' required' : '') . '>';
+        $html .= '<input type="number" step="0.1" min="0" name="afs_lines[' . $name_idx . '][km]" value="' . $km_val . '" placeholder="t.d. 12,5" data-afs-driving-km'
+              . ($km_claim ? ' required' : ' readonly')
+              . '>';
         $html .= '</label></p>';
 
         $html .= '<p><strong>Tunnlar (tal av ferðum ígjøgnum)</strong></p>';

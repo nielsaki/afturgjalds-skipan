@@ -1,0 +1,103 @@
+name: CI + Deploy to WordPress
+
+# Runs lint + tests on every push/PR. On push to main, also uploads the
+# plugin files to the WordPress site over FTPS so the live install stays
+# in sync with the repo.
+#
+# Required secrets (Settings → Secrets and variables → Actions → New repository secret):
+#   FTP_SERVER     — hostname, e.g. "fss.fo" or "ftp.fss.fo"
+#   FTP_USERNAME   — the cPanel / FTP account username
+#   FTP_PASSWORD   — the password for that account
+#
+# Optional repository variables (same screen, "Variables" tab):
+#   DEPLOY_DIR     — remote path to the plugin folder. Defaults to
+#                    /public_html/wp-content/plugins/afturgjald-skipan/
+#   DEPLOY_PROTOCOL — "ftps" (default) or "ftp". Use "ftps" if your host
+#                    supports it (recommended).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint + tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_sqlite, mbstring
+          coverage: none
+          tools: none
+
+      - name: Syntax-check all PHP files
+        run: |
+          set -e
+          find . -type f -name "*.php" \
+            -not -path "./.git/*" \
+            -not -path "./.github/*" \
+            -print0 | xargs -0 -n1 php -l > /dev/null
+
+      - name: Run plugin test suite
+        run: php tests/run-tests.php
+
+  deploy:
+    name: Deploy to WordPress
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # We upload straight from the checkout. The `exclude` list below keeps
+      # dev-only files out of the deployed plugin so only the files the
+      # plugin actually needs at runtime end up on the server.
+      - name: Upload plugin over FTP(S)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.6
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ vars.DEPLOY_DIR || '/public_html/wp-content/plugins/afturgjald-skipan/' }}
+          protocol: ${{ vars.DEPLOY_PROTOCOL || 'ftps' }}
+          local-dir: ./
+          log-level: standard
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            .github/**
+            tests/**
+            .idea/**
+            .vscode/**
+            **/.DS_Store
+            Thumbs.db
+            *.log
+            *.sqlite
+            .distignore
+            .editorconfig
+            README.md
+            readme.md
+            readme.txt
+            CHANGELOG.md
+            phpunit.xml
+            phpunit.xml.dist
+            composer.json
+            composer.lock
+            package.json
+            package-lock.json
+            yarn.lock
+            node_modules/**

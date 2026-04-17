@@ -43,6 +43,12 @@
                 el.disabled = !match;
             });
         });
+        // When the driving section becomes active again, re-apply the
+        // km-claim readonly/required logic (since we just re-enabled all
+        // of its fields in bulk above).
+        if (active === 'driving') {
+            syncKmClaim(line);
+        }
     }
 
     function parseNum(v) {
@@ -122,15 +128,19 @@
     function syncKmClaim(line) {
         var cb = line.querySelector('[data-afs-km-claim]');
         if (!cb) { return; }
-        var km    = line.querySelector('[data-afs-driving-km]');
-        var wrap  = line.querySelector('.afs-km-input');
-        var req   = line.querySelector('.afs-km-req');
+        var km   = line.querySelector('[data-afs-driving-km]');
+        var wrap = line.querySelector('.afs-km-input');
+        var req  = line.querySelector('.afs-km-req');
+        var on   = !!cb.checked;
         if (km) {
-            if (cb.checked) { km.setAttribute('required', ''); }
-            else            { km.removeAttribute('required'); }
+            // Use `readonly` rather than `disabled` so the field keeps its
+            // standard look; the server ignores km when km_claim is off.
+            km.readOnly = !on;
+            if (on) { km.setAttribute('required', ''); }
+            else    { km.removeAttribute('required'); }
         }
-        if (wrap) { wrap.classList.toggle('afs-km-input--off', !cb.checked); }
-        if (req)  { req.toggleAttribute('hidden', !cb.checked); }
+        if (wrap) { wrap.classList.toggle('afs-km-input--off', !on); }
+        if (req)  { req.toggleAttribute('hidden', !on); }
     }
 
     list.addEventListener('change', function (e) {

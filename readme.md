@@ -177,3 +177,63 @@ Um tú ikki vilt hava fráboðanir goymdar í dátugrunninum (bert sendar sum te
 ```php
 add_filter('afs_store_submission', '__return_false');
 ```
+
+## Sjálvvirkandi deploy til WordPress (GitHub Actions → FTP)
+
+Pluginið hevur eina `.github/workflows/deploy.yml`-workflow, sum:
+
+1. Koyrir `php -l` á øllum PHP-fílum og allan test-suitin við hvørjari push/PR.
+2. Um pushið er til `main`, síðani uppglóðar hon pluginið yvir **FTPS** til WordPress-hostingina — bara tær fílur, sum tørvur á fyri at pluginið verður virkið (ongar tests, ongar dot-fílur, ongar README).
+
+### Secrets og variablar at seta á GitHub
+
+Far á **Settings → Secrets and variables → Actions**:
+
+**Secrets** (tab "Secrets"):
+
+| Navn           | Lýsing                                                                 |
+|----------------|------------------------------------------------------------------------|
+| `FTP_SERVER`   | Vertur-navn, t.d. `fss.fo` ella `ftp.fss.fo`                            |
+| `FTP_USERNAME` | FTP/cPanel-brúkari                                                     |
+| `FTP_PASSWORD` | Lósin fyri tann brúkaran                                               |
+
+**Variables** (tab "Variables") — valfrítt:
+
+| Navn              | Standardvirði                                                  | Nær nýtur tú hetta                                           |
+|-------------------|----------------------------------------------------------------|--------------------------------------------------------------|
+| `DEPLOY_DIR`      | `/public_html/wp-content/plugins/afturgjald-skipan/`           | Um teg plugin-mapa er eitt annað staðni á servaranum.        |
+| `DEPLOY_PROTOCOL` | `ftps`                                                         | Set til `ftp` um hostingin ikki skilir FTPS (ikki so sikurt). |
+
+### Koyra manuelt
+
+Far á **Actions → CI + Deploy to WordPress → Run workflow** á GitHub fyri at uppglóða uttan eina push.
+
+### Hvørjar fílur verða uploadaðar?
+
+Bert fílur, sum tørvur er á meðan pluginið koyrir:
+
+```
+drive-reimbursement-form.php
+includes/**
+assets/css/**
+assets/js/**
+```
+
+Hetta verður ikki sent:
+
+- `.git/`, `.github/`, `.idea/`, `.vscode/`
+- `tests/` (test-suitin og serve.php)
+- `.gitignore`, `.distignore`, `README.md`, log-fílur, SQLite-fílur o.s.fr.
+
+Listin yvir útihaldnar fílur er í `.distignore` og í `exclude`-blokkinum í workflow-fíluni.
+
+### Fyrstu ferð
+
+1. Stovna pluginið í WordPress (kopjerið eina ferð manuelt ella via FTP), ella lat workflow-in gera tað fyrstu ferð.
+2. Virkja pluginið undir **Plugins**.
+3. Gagga eftir at `Afturgjald`-menuin er komin.
+4. Hereftir sendur hvør push til `main` nýggjar fílur avstað sjálvvirkandi.
+
+### Vilt tú bert koyra tests, uttan at uppglóða?
+
+- Push til ein branch sum ikki er `main` (ella opna ein PR). `test`-bólkurin koyrir, men `deploy`-bólkurin hopp-ast yvir.

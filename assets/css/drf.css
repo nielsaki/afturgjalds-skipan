@@ -118,10 +118,8 @@
     color: #666;
     font-weight: 400;
 }
-.afs-km-input--off input[type="number"] {
-    background: #f6f7f7;
-    color: #8a8f94;
-}
+/* When the km-claim checkbox is off, the input stays visible with the
+   same styling as every other field; it's just readonly via JS. */
 .afs-km-req[hidden] {
     display: none !important;
 }
