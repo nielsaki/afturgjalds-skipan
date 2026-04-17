@@ -99,6 +99,33 @@
 }
 .afs-remove-line:hover { background: #d63638; color: #fff; }
 
+.afs-km-claim {
+    margin-top: 0.25rem;
+}
+.afs-km-claim label {
+    font-weight: 500;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    line-height: 1.35;
+}
+.afs-km-claim input[type="checkbox"] {
+    width: auto;
+    margin: 0 0.1rem 0 0;
+    flex: 0 0 auto;
+}
+.afs-km-rate {
+    color: #666;
+    font-weight: 400;
+}
+.afs-km-input--off input[type="number"] {
+    background: #f6f7f7;
+    color: #8a8f94;
+}
+.afs-km-req[hidden] {
+    display: none !important;
+}
+
 .afs-tunnels {
     display: grid;
     grid-template-columns: 1fr;

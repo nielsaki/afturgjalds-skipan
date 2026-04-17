@@ -51,9 +51,10 @@
         var type = sel ? sel.value : 'driving';
 
         if (type === 'driving') {
+            var claim = line.querySelector('[data-afs-km-claim]');
             var kmInput = line.querySelector('[data-afs-driving-km]');
             var km = parseNum(kmInput ? kmInput.value : '0');
-            var total = km > 0 ? km * rate : 0;
+            var total = (claim && claim.checked && km > 0) ? km * rate : 0;
 
             line.querySelectorAll('input[name*="[tunnels]"]').forEach(function (inp) {
                 var name = inp.getAttribute('name') || '';
@@ -94,6 +95,7 @@
         node.setAttribute('data-index', String(idx));
         list.appendChild(node);
         toggleTypeSections(node);
+        syncKmClaim(node);
         renumberVisible();
         updateTotal();
     }
@@ -107,10 +109,30 @@
         updateTotal();
     }
 
+    function syncKmClaim(line) {
+        var cb = line.querySelector('[data-afs-km-claim]');
+        if (!cb) { return; }
+        var km    = line.querySelector('[data-afs-driving-km]');
+        var wrap  = line.querySelector('.afs-km-input');
+        var req   = line.querySelector('.afs-km-req');
+        if (km) {
+            if (cb.checked) { km.setAttribute('required', ''); }
+            else            { km.removeAttribute('required'); }
+        }
+        if (wrap) { wrap.classList.toggle('afs-km-input--off', !cb.checked); }
+        if (req)  { req.toggleAttribute('hidden', !cb.checked); }
+    }
+
     list.addEventListener('change', function (e) {
-        if (e.target && e.target.classList && e.target.classList.contains('afs-line__type')) {
-            var line = e.target.closest('.afs-line');
-            if (line) { toggleTypeSections(line); }
+        if (e.target && e.target.classList) {
+            if (e.target.classList.contains('afs-line__type')) {
+                var line = e.target.closest('.afs-line');
+                if (line) { toggleTypeSections(line); }
+            }
+            if (e.target.matches && e.target.matches('[data-afs-km-claim]')) {
+                var line2 = e.target.closest('.afs-line');
+                if (line2) { syncKmClaim(line2); }
+            }
         }
         updateTotal();
     });
@@ -124,6 +146,9 @@
     });
     if (addBtn) { addBtn.addEventListener('click', addLine); }
 
-    list.querySelectorAll('.afs-line').forEach(toggleTypeSections);
+    list.querySelectorAll('.afs-line').forEach(function (line) {
+        toggleTypeSections(line);
+        syncKmClaim(line);
+    });
     updateTotal();
 })();

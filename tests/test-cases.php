@@ -61,13 +61,14 @@ function afs_base_post(array $overrides = []) {
 function afs_tests() {
     $tests = [];
 
-    $tests[] = ['Valid driving submission returns success', function () {
+    $tests[] = ['Driving with km_claim=on counts km + tunnels', function () {
         $post = afs_base_post(['afs_lines' => [
             [
                 'type'        => 'driving',
                 'date'        => '2026-04-10',
                 'description' => 'Tórshavn → Klaksvík',
                 'occasion'    => 'Venjing',
+                'km_claim'    => '1',
                 'km'          => '45,2',
                 'tunnels'     => ['Norðoyatunnilin' => '2'],
             ],
@@ -76,6 +77,38 @@ function afs_tests() {
         afs_assert($res['success'], 'Expected success; errors: ' . implode('; ', $res['errors']));
         // 45.2 * 1.60 + (10 * 2) = 72.32 + 20 = 92.32
         afs_assert_close(92.32, $res['total'], 0.01, 'Unexpected total: ' . $res['total']);
+        afs_assert_str_contains($res['email_body'], 'Kilometragjald');
+    }];
+
+    $tests[] = ['Driving without km_claim, tunnels only, succeeds and ignores km', function () {
+        $post = afs_base_post(['afs_lines' => [[
+            'type'        => 'driving',
+            'date'        => '2026-04-10',
+            'description' => 'Tórshavn → Klaksvík t/r',
+            'occasion'    => 'At keypa eina innvígingarvekt',
+            // no km_claim checkbox posted
+            'km'          => '30',  // should be ignored
+            'tunnels'     => ['Eysturoyartunnilin (Eysturoy-Streymoy)' => '2'],
+        ]]]);
+        $res = AFS_Submission::process($post, []);
+        afs_assert($res['success'], 'Expected success; errors: ' . implode('; ', $res['errors']));
+        // Only tunnels: 2 * 75 = 150
+        afs_assert_close(150.0, $res['total'], 0.01);
+        afs_assert_str_contains($res['email_body'], 'ei krav');
+    }];
+
+    $tests[] = ['Driving with km_claim=on but km=0 fails', function () {
+        $post = afs_base_post(['afs_lines' => [[
+            'type'        => 'driving',
+            'date'        => '2026-04-10',
+            'description' => 'x',
+            'occasion'    => 'x',
+            'km_claim'    => '1',
+            'km'          => '0',
+        ]]]);
+        $res = AFS_Submission::process($post, []);
+        afs_assert(!$res['success'], 'Expected failure');
+        afs_assert_contains($res['errors'], 'Kilometratal');
     }];
 
     $tests[] = ['Missing name fails', function () {
@@ -132,7 +165,7 @@ function afs_tests() {
 
     $tests[] = ['Mixed lines compute total correctly', function () {
         $post = afs_base_post(['afs_lines' => [
-            ['type' => 'driving', 'date' => '2026-04-10', 'description' => 'x', 'occasion' => 'x', 'km' => '10'],
+            ['type' => 'driving', 'date' => '2026-04-10', 'description' => 'x', 'occasion' => 'x', 'km_claim' => '1', 'km' => '10'],
             ['type' => 'expense', 'date' => '2026-04-11', 'description' => 'x', 'occasion' => 'x', 'amount' => '250'],
             ['type' => 'other',   'date' => '2026-04-12', 'description' => 'Gáva', 'amount' => '75,50'],
         ]]);
@@ -147,7 +180,8 @@ function afs_tests() {
         afs_reset_state();
         $post = afs_base_post(['afs_lines' => [[
             'type' => 'driving', 'date' => '2026-04-10',
-            'description' => 'x', 'occasion' => 'x', 'km' => '10',
+            'description' => 'x', 'occasion' => 'x',
+            'km_claim' => '1', 'km' => '10',
         ]]]);
         $res = AFS_Submission::process($post, []);
         afs_assert($res['success']);
@@ -160,7 +194,8 @@ function afs_tests() {
         afs_reset_state();
         $post = afs_base_post(['afs_lines' => [[
             'type' => 'driving', 'date' => '2026-04-10',
-            'description' => 'x', 'occasion' => 'x', 'km' => '5',
+            'description' => 'x', 'occasion' => 'x',
+            'km_claim' => '1', 'km' => '5',
         ]]]);
         AFS_Submission::process($post, []);
         $log = file_get_contents(AFS_Logger::log_path());
