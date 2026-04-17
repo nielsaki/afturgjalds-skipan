@@ -179,6 +179,26 @@ class AFS_Submission {
         $result['email_body'] = $body;
         $result['subject']    = $subject;
 
+        // Persist a record of the submission so bookkeeping can review it in
+        // wp-admin. Saved even when sending failed, so nothing is lost.
+        $should_store = function_exists('apply_filters')
+            ? apply_filters('afs_store_submission', true, $result)
+            : true;
+        if ($should_store && class_exists('AFS_Store')) {
+            $stored_id = AFS_Store::save([
+                'name'       => $name,
+                'email'      => $email,
+                'account'    => $account,
+                'lines'      => $result['lines'],
+                'total'      => $total,
+                'subject'    => $subject,
+                'email_body' => $body,
+                'sent'       => (bool) $sent,
+                'line_count' => count($lines),
+            ]);
+            $result['stored_id'] = $stored_id;
+        }
+
         if (!$sent) {
             $result['errors'][] = 'Teldupostur kundi ikki sendast. Vinaliga royn aftur ella tak samband við bókhaldið.';
         }

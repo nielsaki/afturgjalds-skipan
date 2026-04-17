@@ -1,0 +1,30 @@
+/* Admin: submissions list + detail page styling. */
+
+.afs-admin .afs-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.6;
+    background: #f0f0f1;
+    color: #2c3338;
+}
+.afs-admin .afs-status--mottikin  { background: #e5f0fb; color: #0a4b78; }
+.afs-admin .afs-status--i_arbeidi { background: #fff4e5; color: #8a5a00; }
+.afs-admin .afs-status--utgoldin  { background: #e6f6ea; color: #1a6b2d; }
+.afs-admin .afs-status--avvist    { background: #fbe8e8; color: #8a1f1f; }
+
+.afs-admin .afs-detail-cols .postbox {
+    margin-bottom: 1rem;
+}
+
+.afs-admin .afs-lines-list {
+    margin-left: 1.25rem;
+}
+
+@media (max-width: 960px) {
+    .afs-admin .afs-detail-cols {
+        grid-template-columns: 1fr !important;
+    }
+}

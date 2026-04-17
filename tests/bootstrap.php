@@ -24,4 +24,9 @@ require_once $root . '/includes/types/class-afs-type-driving.php';
 require_once $root . '/includes/types/class-afs-type-expense.php';
 require_once $root . '/includes/types/class-afs-type-other.php';
 require_once $root . '/includes/class-afs-types.php';
+require_once $root . '/includes/class-afs-store.php';
 require_once $root . '/includes/class-afs-submission.php';
+
+// Ensure the submissions table exists in the in-memory SQLite stub so
+// AFS_Store queries work end-to-end.
+AFS_Store::install_table();

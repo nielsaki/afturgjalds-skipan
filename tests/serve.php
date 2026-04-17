@@ -18,6 +18,10 @@ if (strpos($path, '/assets/') === 0 && is_file(__DIR__ . '/..' . $path)) {
     return false;
 }
 
+// Use a file-backed SQLite DB so persisted submissions survive across
+// preview requests (instead of the default in-memory test DB).
+$GLOBALS['AFS_WPDB_PATH'] = sys_get_temp_dir() . '/afs-preview.sqlite';
+
 require __DIR__ . '/wp-stubs.php';
 
 if (!defined('DRF_EMAIL_TEST_MODE')) { define('DRF_EMAIL_TEST_MODE', true); }
@@ -35,12 +39,28 @@ require_once $root . '/includes/types/class-afs-type-driving.php';
 require_once $root . '/includes/types/class-afs-type-expense.php';
 require_once $root . '/includes/types/class-afs-type-other.php';
 require_once $root . '/includes/class-afs-types.php';
+require_once $root . '/includes/class-afs-store.php';
 require_once $root . '/includes/class-afs-submission.php';
 require_once $root . '/includes/class-afs-form.php';
+
+AFS_Store::install_table();
 
 if ($path === '/clear-log') {
     $p = AFS_Logger::log_path();
     if (file_exists($p)) { @unlink($p); }
+    header('Location: /');
+    exit;
+}
+
+if ($path === '/clear-submissions') {
+    global $wpdb;
+    $wpdb->query('DELETE FROM ' . AFS_Store::table());
+    header('Location: /');
+    exit;
+}
+
+if ($path === '/delete-submission' && !empty($_GET['id'])) {
+    AFS_Store::delete((int) $_GET['id']);
     header('Location: /');
     exit;
 }
@@ -54,7 +74,9 @@ $js_data = json_encode([
     'tunnels'   => AFS_Type_Driving::tunnels(),
 ], JSON_UNESCAPED_UNICODE);
 
-$has_log = trim($log_content) !== '';
+$has_log     = trim($log_content) !== '';
+$submissions = AFS_Store::query(['per_page' => 50]);
+$labels      = AFS_Store::statuses();
 ?>
 <!DOCTYPE html>
 <html lang="fo">
@@ -76,6 +98,16 @@ $has_log = trim($log_content) !== '';
         .demo-log { background: #1d2327; color: #d0d4d8; padding: 1rem; border-radius: 6px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12px; line-height: 1.5; overflow: auto; max-height: 85vh; white-space: pre-wrap; word-break: break-word; }
         .demo-log.empty { color: #8a8f94; font-style: italic; }
         .afs-wrap { margin: 0; }
+        .demo-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 6px; overflow: hidden; font-size: 13px; }
+        .demo-table th, .demo-table td { padding: 8px 10px; border-bottom: 1px solid #e5e7ea; text-align: left; }
+        .demo-table th { background: #f6f7f7; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: #666; }
+        .demo-table tr:last-child td { border-bottom: none; }
+        .demo-table .afs-status { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #e5f0fb; color: #0a4b78; }
+        .demo-empty { padding: 1rem; background: #fff; border-radius: 6px; color: #8a8f94; font-style: italic; }
+        .demo-section { padding: 1rem; max-width: 1500px; margin: 0 auto; }
+        .demo-section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin: 0 0 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .demo-section h2 a { color: #d63638; font-weight: 600; text-decoration: none; font-size: 11px; margin-left: 0.5rem; }
+        .demo-section h2 a:hover { text-decoration: underline; }
         @media (max-width: 960px) { .demo-cols { grid-template-columns: 1fr; } .demo-log { max-height: 60vh; } }
     </style>
 </head>
@@ -107,6 +139,45 @@ $has_log = trim($log_content) !== '';
                 }
             ?></pre>
         </div>
+    </div>
+
+    <div class="demo-section">
+        <h2>
+            <span>Goymdar fráboðanir (<?php echo count($submissions['items']); ?>)</span>
+            <?php if ($submissions['items']): ?>
+                <a href="/clear-submissions" onclick="return confirm('Strika allar?')">Strika allar</a>
+            <?php endif; ?>
+        </h2>
+        <?php if (!$submissions['items']): ?>
+            <div class="demo-empty">Ongar fráboðanir eru goymdar enn. Send formin inn fyri at fáa eina í hesa tabellina.</div>
+        <?php else: ?>
+            <table class="demo-table">
+                <thead>
+                    <tr>
+                        <th>#</th><th>Dagur</th><th>Navn</th><th>Teldupostur</th>
+                        <th>Linjur</th><th>Upphædd</th><th>Støða</th><th>Sendur</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($submissions['items'] as $row): ?>
+                        <tr>
+                            <td><strong>#<?php echo (int) $row['id']; ?></strong></td>
+                            <td><?php echo htmlspecialchars($row['created_at'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo htmlspecialchars($row['email'], ENT_QUOTES, 'UTF-8'); ?></td>
+                            <td><?php echo (int) $row['line_count']; ?></td>
+                            <td><?php echo number_format((float) $row['total_amount'], 2, ',', ' '); ?> kr</td>
+                            <td><span class="afs-status"><?php echo htmlspecialchars($labels[$row['status']] ?? $row['status'], ENT_QUOTES, 'UTF-8'); ?></span></td>
+                            <td><?php echo !empty($row['sent_ok']) ? '✓' : '<span style="color:#d63638">✗</span>'; ?></td>
+                            <td><a href="/delete-submission?id=<?php echo (int) $row['id']; ?>" onclick="return confirm('Strika?')" style="color:#d63638">Strika</a></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <p style="color:#666;font-size:12px;margin:0.5rem 0 0;">
+                (Hetta er ein einfaldur listi fyri lokala próving. Í WordPress fært tú eitt fullfíggjað admin-borð við filtrum, søku og yvirskriftum.)
+            </p>
+        <?php endif; ?>
     </div>
 
     <script>window.AFS_DATA = <?php echo $js_data; ?>;</script>
