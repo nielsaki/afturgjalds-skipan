@@ -121,7 +121,7 @@ class AFS_Form {
      */
     public static function render_line($index, array $values = []) {
         $types    = AFS_Types::all();
-        $selected = isset($values['type']) ? (string) $values['type'] : 'driving';
+        $selected = isset($values['type']) ? (string) $values['type'] : '';
         $name_idx = (string) $index;
 
         $defaults = [
@@ -140,7 +140,8 @@ class AFS_Form {
             </div>
 
             <p><label>Slag *<br>
-                <select name="afs_lines[<?php echo esc_attr($name_idx); ?>][type]" class="afs-line__type">
+                <select name="afs_lines[<?php echo esc_attr($name_idx); ?>][type]" class="afs-line__type" required>
+                    <option value="" disabled <?php selected($selected === ''); ?>>— Vel eitt —</option>
                     <?php foreach ($types as $t): ?>
                         <option value="<?php echo esc_attr($t->id()); ?>" <?php selected($selected === $t->id()); ?>><?php echo esc_html($t->label()); ?></option>
                     <?php endforeach; ?>

@@ -236,6 +236,16 @@ function afs_tests() {
         afs_assert_contains($res['errors'], 'ókent');
     }];
 
+    $tests[] = ['Empty type shows "Vel slag" error', function () {
+        $post = afs_base_post(['afs_lines' => [[
+            'type' => '', 'date' => '2026-04-10',
+            'description' => 'x', 'occasion' => 'x',
+        ]]]);
+        $res = AFS_Submission::process($post, []);
+        afs_assert(!$res['success']);
+        afs_assert_contains($res['errors'], 'Vel slag');
+    }];
+
     $tests[] = ['Invalid nonce rejected', function () {
         $post = afs_base_post(['afs_nonce' => 'WRONG']);
         $res = AFS_Submission::process($post, []);

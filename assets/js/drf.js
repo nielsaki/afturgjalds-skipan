@@ -35,7 +35,13 @@
         if (!sel) { return; }
         var active = sel.value;
         line.querySelectorAll('.afs-line__type-section').forEach(function (sec) {
-            sec.style.display = sec.getAttribute('data-type') === active ? '' : 'none';
+            var match = sec.getAttribute('data-type') === active;
+            sec.style.display = match ? '' : 'none';
+            // Disable fields in inactive sections so hidden required fields don't block
+            // submit and their values aren't sent for the wrong type.
+            sec.querySelectorAll('input, select, textarea').forEach(function (el) {
+                el.disabled = !match;
+            });
         });
     }
 
@@ -48,15 +54,19 @@
 
     function lineAmount(line) {
         var sel = line.querySelector('.afs-line__type');
-        var type = sel ? sel.value : 'driving';
+        var type = sel ? sel.value : '';
+        if (!type) { return 0; }
+
+        var section = line.querySelector('.afs-line__type-section[data-type="' + type + '"]');
+        if (!section) { return 0; }
 
         if (type === 'driving') {
-            var claim = line.querySelector('[data-afs-km-claim]');
-            var kmInput = line.querySelector('[data-afs-driving-km]');
+            var claim = section.querySelector('[data-afs-km-claim]');
+            var kmInput = section.querySelector('[data-afs-driving-km]');
             var km = parseNum(kmInput ? kmInput.value : '0');
             var total = (claim && claim.checked && km > 0) ? km * rate : 0;
 
-            line.querySelectorAll('input[name*="[tunnels]"]').forEach(function (inp) {
+            section.querySelectorAll('input[name*="[tunnels]"]').forEach(function (inp) {
                 var name = inp.getAttribute('name') || '';
                 var m = name.match(/\[tunnels\]\[(.+?)\]/);
                 if (!m) { return; }
@@ -70,7 +80,7 @@
             return total;
         }
 
-        var amtInput = line.querySelector('[data-afs-amount]');
+        var amtInput = section.querySelector('[data-afs-amount]');
         var amt = parseNum(amtInput ? amtInput.value : '0');
         return amt > 0 ? amt : 0;
     }

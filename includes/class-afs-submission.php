@@ -78,7 +78,11 @@ class AFS_Submission {
             $type_id = sanitize_text_field($raw['type'] ?? '');
             $type    = AFS_Types::get($type_id);
             if (!$type) {
-                $result['errors'][] = 'Slagið fyri linju ' . ($i + 1) . ' er ókent.';
+                if ($type_id === '') {
+                    $result['errors'][] = 'Vel slag fyri linju ' . ($i + 1) . '.';
+                } else {
+                    $result['errors'][] = 'Slagið fyri linju ' . ($i + 1) . ' er ókent.';
+                }
                 continue;
             }
 
