@@ -201,7 +201,7 @@ Far á **Settings → Secrets and variables → Actions**:
 
 | Navn              | Standardvirði                                                  | Nær nýtur tú hetta                                           |
 |-------------------|----------------------------------------------------------------|--------------------------------------------------------------|
-| `DEPLOY_DIR`      | `/public_html/wp-content/plugins/afturgjald-skipan/`           | Um teg plugin-mapa er eitt annað staðni á servaranum.        |
+| `DEPLOY_DIR`      | `/public_html/wp-content/plugins/afturgjalds-skipan/`          | Um teg plugin-mapa er eitt annað staðni á servaranum.        |
 | `DEPLOY_PROTOCOL` | `ftps`                                                         | Set til `ftp` um hostingin ikki skilir FTPS (ikki so sikurt). |
 
 ### Koyra manuelt

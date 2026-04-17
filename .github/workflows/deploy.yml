@@ -11,7 +11,7 @@ name: CI + Deploy to WordPress
 #
 # Optional repository variables (same screen, "Variables" tab):
 #   DEPLOY_DIR     — remote path to the plugin folder. Defaults to
-#                    /public_html/wp-content/plugins/afturgjald-skipan/
+#                    /public_html/wp-content/plugins/afturgjalds-skipan/
 #   DEPLOY_PROTOCOL — "ftps" (default) or "ftp". Use "ftps" if your host
 #                    supports it (recommended).
 
@@ -71,7 +71,7 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ vars.DEPLOY_DIR || '/public_html/wp-content/plugins/afturgjald-skipan/' }}
+          server-dir: ${{ vars.DEPLOY_DIR || '/public_html/wp-content/plugins/afturgjalds-skipan/' }}
           protocol: ${{ vars.DEPLOY_PROTOCOL || 'ftps' }}
           local-dir: ./
           log-level: standard
