@@ -23,11 +23,12 @@ afturgjald-skipan/
 ├── assets/
 │   ├── css/drf.css
 │   └── js/drf.js
-├── tests/                         # standalone PHP test suite
+├── tests/                         # standalone PHP test suite + preview
 │   ├── bootstrap.php
 │   ├── wp-stubs.php
 │   ├── test-cases.php
-│   └── run-tests.php
+│   ├── run-tests.php
+│   └── serve.php                  # localhost preview (uses PHP built-in server)
 └── readme.md
 ```
 
@@ -59,6 +60,35 @@ define('DRF_EMAIL_LOG_FILE',  WP_CONTENT_DIR . '/afs-email.log'); // valfrítt
 - Um `DRF_EMAIL_DRY_RUN` er `true`: einki `wp_mail()` verður kallað — alt fer bert í loggin.
 
 Innstillingar-síðan vísir seinasta partin av logginum beinleiðis.
+
+## Lokal próving í kaga (uttan WordPress)
+
+Frá plugin-mappuni:
+
+```bash
+php -S localhost:8080 -t . tests/serve.php
+```
+
+Opna síðani `http://localhost:8080/` í kaganum. Tá sæst:
+
+- Vinstru megin: Formurin (sama form sum í WordPress).
+- Høgru megin: Log-fílan við hvørjum teldupostum, sum vildi verið sendir.
+
+Dry-run er settur frá byrjan, so **einki verður í roynd og veru sent**. Trýst á "Tøm log" fyri at byrja umaftur.
+
+## Lokal próving í WordPress (fulla skipanin)
+
+Um tú brúkar [Local](https://localwp.com/) (mappan `~/Local Sites/` varð síggj í heimamappuni):
+
+1. Stovna eitt nýtt site í Local.
+2. Symlink ella copyer `afturgjald-skipan/` inn í `app/public/wp-content/plugins/`:
+   ```bash
+   ln -s "/Users/nielsakimork/Library/CloudStorage/Dropbox/Føroya Styrkisamband (FSS)/10 Heimasíðan/2 SelfMade_Plugins/afturgjald-skipan" \
+         ~/Local\ Sites/DIN-SITE/app/public/wp-content/plugins/afturgjald-skipan
+   ```
+3. Virka pluginið undir `Plugins` → `Afturgjald — skipan`.
+4. Legg test-mode konstantirnar í `app/public/wp-config.php` (sí undir).
+5. Stovna eina síðu og set inn shortcodu `[afturgjald_form]`.
 
 ## Automatiskar royningar (CLI)
 
