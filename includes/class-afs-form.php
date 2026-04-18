@@ -60,12 +60,12 @@ class AFS_Form {
 
                     <p class="afs-consent"><label>
                         <input type="checkbox" name="afs_consent" value="1" <?php checked(!empty($values['afs_consent'])); ?> required>
-                        Eg góðtaki, at hesar upplýsingarnar verða nýttar til at útreiða og avgreiða afturgjaldið.
+                        Eg góðtaki, at hesar upplýsingarnar verða nýttar til at útreiða og avgreiða endurgjaldið.
                     </label></p>
                 </fieldset>
 
                 <fieldset class="afs-lines">
-                    <legend>Afturgjaldslinjur</legend>
+                    <legend>Endurgjaldslinjur</legend>
 
                     <div class="afs-lines__list" id="afs-lines-list">
                         <?php
@@ -84,12 +84,12 @@ class AFS_Form {
                     </div>
 
                     <p class="afs-add-row">
-                        <button type="button" class="afs-add-line" id="afs-add-line">+ Legg afturgjaldslinju afturat</button>
+                        <button type="button" class="afs-add-line" id="afs-add-line">+ Legg endurgjaldslinju afturat</button>
                     </p>
                 </fieldset>
 
                 <div class="afs-total-wrap">
-                    <label>Útroknað afturgjald íalt<br>
+                    <label>Útroknað endurgjald íalt<br>
                         <input type="text" id="afs-total" readonly>
                     </label>
                     <p><small>Hetta er ein fyribils útrokning. Upphæddin verður endaliga uppgjørd av bókhaldinum.</small></p>
@@ -125,10 +125,10 @@ class AFS_Form {
         $name_idx = (string) $index;
 
         $defaults = [
-            'date'        => $values['date']        ?? date('Y-m-d'),
-            'description' => $values['description'] ?? '',
-            'occasion'    => $values['occasion']    ?? '',
-            'note'        => $values['note']        ?? '',
+            'date'          => $values['date']          ?? date('Y-m-d'),
+            'description'   => $values['description']   ?? '',
+            'note'          => $values['note']          ?? '',
+            'authorized_by' => $values['authorized_by'] ?? '',
         ];
 
         ob_start();
@@ -153,11 +153,7 @@ class AFS_Form {
             </label></p>
 
             <p><label>Lýsing *<br>
-                <input type="text" name="afs_lines[<?php echo esc_attr($name_idx); ?>][description]" value="<?php echo esc_attr($defaults['description']); ?>" placeholder="t.d. Tórshavn → Klaksvík / innkeyp av bandi" required>
-            </label></p>
-
-            <p><label>Høvi / endamál<br>
-                <input type="text" name="afs_lines[<?php echo esc_attr($name_idx); ?>][occasion]" value="<?php echo esc_attr($defaults['occasion']); ?>">
+                <input type="text" class="afs-line__desc" name="afs_lines[<?php echo esc_attr($name_idx); ?>][description]" value="<?php echo esc_attr($defaults['description']); ?>" placeholder="" required>
             </label></p>
 
             <div class="afs-line__type-fields">
@@ -169,7 +165,11 @@ class AFS_Form {
             </div>
 
             <p><label>Viðmerking (valfrítt)<br>
-                <textarea name="afs_lines[<?php echo esc_attr($name_idx); ?>][note]" rows="2"><?php echo esc_textarea($defaults['note']); ?></textarea>
+                <textarea class="afs-line__note" name="afs_lines[<?php echo esc_attr($name_idx); ?>][note]" rows="2" placeholder=""><?php echo esc_textarea($defaults['note']); ?></textarea>
+            </label></p>
+
+            <p><label>Navn á tí, sum gav loyvi (valfrítt)<br>
+                <input type="text" class="afs-line__authorized" name="afs_lines[<?php echo esc_attr($name_idx); ?>][authorized_by]" value="<?php echo esc_attr($defaults['authorized_by']); ?>">
             </label></p>
         </div>
         <?php

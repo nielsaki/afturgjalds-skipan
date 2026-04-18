@@ -34,9 +34,9 @@ class AFS_Type_Driving extends AFS_Type {
         $n = [];
         $n['type']        = $this->id();
         $n['date']        = sanitize_text_field($raw['date'] ?? '');
-        $n['description'] = sanitize_text_field($raw['description'] ?? '');
-        $n['occasion']    = sanitize_text_field($raw['occasion'] ?? '');
-        $n['note']        = sanitize_textarea_field($raw['note'] ?? '');
+        $n['description']   = sanitize_text_field($raw['description'] ?? '');
+        $n['note']           = sanitize_textarea_field($raw['note'] ?? '');
+        $n['authorized_by']  = sanitize_text_field($raw['authorized_by'] ?? '');
         $n['km_claim']    = !empty($raw['km_claim']);
         $n['km']          = $this->parse_float($raw['km'] ?? '');
 
@@ -57,11 +57,10 @@ class AFS_Type_Driving extends AFS_Type {
 
         if ($n['date'] === '')        { $errors[] = 'Dagur vantar fyri koyring.'; }
         if ($n['description'] === '') { $errors[] = 'Lýsing av koyring vantar.'; }
-        if ($n['occasion'] === '')    { $errors[] = 'Høvi/endamál vantar fyri koyring.'; }
 
         if ($n['km_claim']) {
             if ($n['km'] <= 0) {
-                $errors[] = 'Kilometratal má vera størri enn 0, tá ið tú krevur afturgjald fyri kilometrar.';
+                $errors[] = 'Kilometratal má vera størri enn 0, tá ið tú krevur endurgjald fyri kilometrar.';
             }
         } else {
             $n['km'] = 0.0;
@@ -103,12 +102,11 @@ class AFS_Type_Driving extends AFS_Type {
         $out  = "Slag:            {$this->label()}\n";
         $out .= "Dagur:           {$n['date']}\n";
         $out .= "Lýsing:          {$n['description']}\n";
-        $out .= "Høvi/endamál:    {$n['occasion']}\n";
         if ($km_claim) {
             $out .= 'Kilometrar:      ' . number_format($km, 1, ',', ' ') . "\n";
             $out .= 'Kilometragjald:  ' . number_format($rate, 2, ',', ' ') . ' kr/km → ' . $this->format_kr($km_amount) . "\n";
         } else {
-            $out .= "Km-afturgjald:   ei krav (avtala ikki sett)\n";
+            $out .= "Km-endurgjald:   ei krav (avtala ikki sett)\n";
         }
         if ($tunnel_lines) {
             $out .= "Tunnlar:\n" . implode("\n", $tunnel_lines) . "\n";
@@ -118,6 +116,9 @@ class AFS_Type_Driving extends AFS_Type {
         if (!empty($n['note'])) {
             $out .= "Viðmerking:      {$n['note']}\n";
         }
+        if (!empty($n['authorized_by'])) {
+            $out .= "Loyvi frá:       {$n['authorized_by']}\n";
+        }
         return $out;
     }
 
@@ -126,7 +127,7 @@ class AFS_Type_Driving extends AFS_Type {
         $rate     = self::rate_per_km();
         $km_val   = isset($v['km']) ? esc_attr($v['km']) : '';
         // Default to unchecked — the km input only appears once the user
-        // actively ticks "Avtala um afturgjald fyri koyrdar kilometrar".
+        // actively ticks "Avtala um endurgjald fyri koyrdar kilometrar".
         $km_claim = !empty($v['km_claim']);
 
         $name_idx = esc_attr((string) $index);
@@ -135,7 +136,7 @@ class AFS_Type_Driving extends AFS_Type {
 
         $html .= '<p class="afs-km-claim"><label>';
         $html .= '<input type="checkbox" name="afs_lines[' . $name_idx . '][km_claim]" value="1"' . ($km_claim ? ' checked' : '') . ' data-afs-km-claim> ';
-        $html .= 'Avtala um afturgjald fyri koyrdar kilometrar ';
+        $html .= 'Avtala um endurgjald fyri koyrdar kilometrar ';
         $html .= '<span class="afs-km-rate">(' . esc_html(number_format($rate, 2, ',', ' ')) . ' kr/km)</span>';
         $html .= '</label></p>';
 
@@ -154,7 +155,7 @@ class AFS_Type_Driving extends AFS_Type {
         foreach ($tunnels as $name => $cost) {
             $count = isset($v['tunnels'][$name]) ? (int) $v['tunnels'][$name] : 0;
             $html .= '<label class="afs-tunnel">'
-                  . '<span class="afs-tunnel__name">' . esc_html($name) . ' (' . esc_html((string) $cost) . ' kr)</span>'
+                  . '<span class="afs-tunnel__name">' . esc_html($name) . ' (' . esc_html((string) $cost) . ' kr hvønn veg)</span>'
                   . '<input type="number" min="0" step="1" name="afs_lines[' . $name_idx . '][tunnels][' . esc_attr($name) . ']" value="' . esc_attr((string) $count) . '">'
                   . '</label>';
         }

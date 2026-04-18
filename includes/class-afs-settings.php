@@ -1,6 +1,6 @@
 <?php
 /**
- * WordPress admin settings page (Settings → Afturgjald).
+ * WordPress admin settings page (Endurgjald → Stillingar).
  *
  * @package AfturgjaldSkipan
  */
@@ -19,7 +19,7 @@ class AFS_Settings {
         $log_size   = $log_exists ? (int) @filesize($log_path) : 0;
         ?>
         <div class="wrap">
-            <h1>Afturgjald — stillingar</h1>
+            <h1>Endurgjald — stillingar</h1>
 
             <form method="post" action="options.php">
                 <?php settings_fields('drf_settings'); ?>

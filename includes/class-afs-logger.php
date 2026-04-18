@@ -24,11 +24,11 @@ class AFS_Logger {
         if (function_exists('wp_upload_dir')) {
             $u = wp_upload_dir();
             if (!empty($u['basedir'])) {
-                $dir = trailingslashit($u['basedir']) . 'afturgjald-skipan';
+                $dir = trailingslashit($u['basedir']) . 'endurgjald-skipan';
             }
         }
         if ($dir === '') {
-            $dir = sys_get_temp_dir() . '/afturgjald-skipan';
+            $dir = sys_get_temp_dir() . '/endurgjald-skipan';
         }
         if (!file_exists($dir)) {
             if (function_exists('wp_mkdir_p')) {

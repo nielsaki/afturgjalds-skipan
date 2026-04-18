@@ -71,7 +71,6 @@ function afs_tests() {
                 'type'        => 'driving',
                 'date'        => '2026-04-10',
                 'description' => 'Tórshavn → Klaksvík',
-                'occasion'    => 'Venjing',
                 'km_claim'    => '1',
                 'km'          => '45,2',
                 'tunnels'     => ['Norðoyatunnilin' => '2'],
@@ -89,7 +88,6 @@ function afs_tests() {
             'type'        => 'driving',
             'date'        => '2026-04-10',
             'description' => 'Tórshavn → Klaksvík t/r',
-            'occasion'    => 'At keypa eina innvígingarvekt',
             // no km_claim checkbox posted
             'km'          => '30',  // should be ignored
             'tunnels'     => ['Eysturoyartunnilin (Eysturoy-Streymoy)' => '2'],
@@ -106,7 +104,6 @@ function afs_tests() {
             'type'        => 'driving',
             'date'        => '2026-04-10',
             'description' => 'x',
-            'occasion'    => 'x',
             'km_claim'    => '1',
             'km'          => '0',
         ]]]);
@@ -120,7 +117,7 @@ function afs_tests() {
             'afs_name'  => '',
             'afs_lines' => [[
                 'type' => 'driving', 'date' => '2026-04-10',
-                'description' => 'x', 'occasion' => 'x', 'km' => '10',
+                'description' => 'x', 'km' => '10',
             ]],
         ]);
         $res = AFS_Submission::process($post, []);
@@ -133,7 +130,7 @@ function afs_tests() {
             'afs_consent' => '',
             'afs_lines'   => [[
                 'type' => 'driving', 'date' => '2026-04-10',
-                'description' => 'x', 'occasion' => 'x', 'km' => '10',
+                'description' => 'x', 'km' => '10',
             ]],
         ]);
         $res = AFS_Submission::process($post, []);
@@ -146,7 +143,7 @@ function afs_tests() {
             'afs_account' => '1234-1234567',
             'afs_lines'   => [[
                 'type' => 'driving', 'date' => '2026-04-10',
-                'description' => 'x', 'occasion' => 'x', 'km' => '10',
+                'description' => 'x', 'km' => '10',
             ]],
         ]);
         $res = AFS_Submission::process($post, []);
@@ -159,7 +156,6 @@ function afs_tests() {
             'type'        => 'expense',
             'date'        => '2026-04-10',
             'description' => 'Reikningur',
-            'occasion'    => 'Útbúnaður',
             'amount'      => '',
         ]]]);
         $res = AFS_Submission::process($post, []);
@@ -169,22 +165,21 @@ function afs_tests() {
 
     $tests[] = ['Mixed lines compute total correctly', function () {
         $post = afs_base_post(['afs_lines' => [
-            ['type' => 'driving', 'date' => '2026-04-10', 'description' => 'x', 'occasion' => 'x', 'km_claim' => '1', 'km' => '10'],
-            ['type' => 'expense', 'date' => '2026-04-11', 'description' => 'x', 'occasion' => 'x', 'amount' => '250'],
-            ['type' => 'other',   'date' => '2026-04-12', 'description' => 'Gáva', 'amount' => '75,50'],
+            ['type' => 'driving', 'date' => '2026-04-10', 'description' => 'x', 'km_claim' => '1', 'km' => '10'],
+            ['type' => 'expense', 'date' => '2026-04-11', 'description' => 'x', 'amount' => '250'],
         ]]);
         $res = AFS_Submission::process($post, []);
         afs_assert($res['success'], 'Expected success; errors: ' . implode('; ', $res['errors']));
-        // 10*1.60 + 250 + 75.50 = 16 + 250 + 75.50 = 341.50
-        afs_assert_close(341.50, $res['total'], 0.01);
-        afs_assert_eq(3, count($res['lines']));
+        // 10*1.60 + 250 = 16 + 250 = 266
+        afs_assert_close(266.0, $res['total'], 0.01);
+        afs_assert_eq(2, count($res['lines']));
     }];
 
     $tests[] = ['Dry-run mode logs but does not call wp_mail', function () {
         afs_reset_state();
         $post = afs_base_post(['afs_lines' => [[
             'type' => 'driving', 'date' => '2026-04-10',
-            'description' => 'x', 'occasion' => 'x',
+            'description' => 'x',
             'km_claim' => '1', 'km' => '10',
         ]]]);
         $res = AFS_Submission::process($post, []);
@@ -198,7 +193,7 @@ function afs_tests() {
         afs_reset_state();
         $post = afs_base_post(['afs_lines' => [[
             'type' => 'driving', 'date' => '2026-04-10',
-            'description' => 'x', 'occasion' => 'x',
+            'description' => 'x',
             'km_claim' => '1', 'km' => '5',
         ]]]);
         AFS_Submission::process($post, []);
@@ -222,7 +217,7 @@ function afs_tests() {
             'afs_hp' => 'spam',
             'afs_lines' => [[
                 'type' => 'driving', 'date' => '2026-04-10',
-                'description' => 'x', 'occasion' => 'x', 'km' => '10',
+                'description' => 'x', 'km' => '10',
             ]],
         ]);
         $res = AFS_Submission::process($post, []);
@@ -233,7 +228,7 @@ function afs_tests() {
     $tests[] = ['Unknown type rejected', function () {
         $post = afs_base_post(['afs_lines' => [[
             'type' => 'flying-carpet', 'date' => '2026-04-10',
-            'description' => 'x', 'occasion' => 'x',
+            'description' => 'x',
         ]]]);
         $res = AFS_Submission::process($post, []);
         afs_assert(!$res['success']);
@@ -243,7 +238,7 @@ function afs_tests() {
     $tests[] = ['Empty type shows "Vel slag" error', function () {
         $post = afs_base_post(['afs_lines' => [[
             'type' => '', 'date' => '2026-04-10',
-            'description' => 'x', 'occasion' => 'x',
+            'description' => 'x',
         ]]]);
         $res = AFS_Submission::process($post, []);
         afs_assert(!$res['success']);
@@ -262,12 +257,12 @@ function afs_tests() {
         $post = afs_base_post(['afs_account' => '6460 0005461304', 'afs_lines' => [
             [
                 'type' => 'driving', 'date' => '2026-04-10',
-                'description' => 'Tórshavn → Klaksvík', 'occasion' => 'Venjing',
+                'description' => 'Tórshavn → Klaksvík',
                 'km_claim' => '1', 'km' => '45,2',
                 'tunnels' => ['Norðoyatunnilin' => '2'],
             ],
             ['type' => 'expense', 'date' => '2026-04-11',
-             'description' => 'Reikningur', 'occasion' => 'Útbúnaður',
+             'description' => 'Reikningur',
              'amount' => '250'],
         ]]);
         $res = AFS_Submission::process($post, []);
@@ -327,13 +322,13 @@ function afs_tests() {
         // Seed 3 submissions with different names/statuses.
         $post1 = afs_base_post(['afs_name' => 'Anna', 'afs_lines' => [[
             'type' => 'expense', 'date' => '2026-01-01',
-            'description' => 'a', 'occasion' => 'o', 'amount' => '10']]]);
+            'description' => 'a', 'amount' => '10']]]);
         $post2 = afs_base_post(['afs_name' => 'Bjarki', 'afs_lines' => [[
             'type' => 'expense', 'date' => '2026-01-02',
-            'description' => 'b', 'occasion' => 'o', 'amount' => '20']]]);
+            'description' => 'b', 'amount' => '20']]]);
         $post3 = afs_base_post(['afs_name' => 'Katrin', 'afs_lines' => [[
             'type' => 'expense', 'date' => '2026-01-03',
-            'description' => 'c', 'occasion' => 'o', 'amount' => '30']]]);
+            'description' => 'c', 'amount' => '30']]]);
         $r1 = AFS_Submission::process($post1, []);
         $r2 = AFS_Submission::process($post2, []);
         $r3 = AFS_Submission::process($post3, []);
@@ -364,7 +359,7 @@ function afs_tests() {
         for ($i = 1; $i <= 3; $i++) {
             $r = AFS_Submission::process(afs_base_post(['afs_lines' => [[
                 'type' => 'expense', 'date' => '2026-01-0' . $i,
-                'description' => 'x', 'occasion' => 'o', 'amount' => '10',
+                'description' => 'x', 'amount' => '10',
             ]]]), []);
             $ids[] = $r['stored_id'];
         }
@@ -382,7 +377,7 @@ function afs_tests() {
         afs_reset_state();
         $r = AFS_Submission::process(afs_base_post(['afs_lines' => [[
             'type' => 'expense', 'date' => '2026-01-01',
-            'description' => 'x', 'occasion' => 'o', 'amount' => '10']]]), []);
+            'description' => 'x', 'amount' => '10']]]), []);
         afs_assert(!empty($r['stored_id']));
 
         afs_assert_eq(0, AFS_Store::set_status($r['stored_id'], 'pwned'));
@@ -401,7 +396,7 @@ function afs_tests() {
 
         $r = AFS_Submission::process(afs_base_post(['afs_lines' => [[
             'type' => 'expense', 'date' => '2026-01-01',
-            'description' => 'x', 'occasion' => 'o', 'amount' => '10']]]), []);
+            'description' => 'x', 'amount' => '10']]]), []);
         afs_assert($r['success']);
         afs_assert_eq(0, (int) ($r['stored_id'] ?? 0), 'Expected no stored_id when filter disabled storage');
         afs_assert_eq(0, AFS_Store::query()['total']);
@@ -416,7 +411,7 @@ function afs_tests() {
 
         $post = afs_base_post(['afs_lines' => [[
             'type' => 'expense', 'date' => '2026-04-10',
-            'description' => 'Reikningur', 'occasion' => 'Útbúnaður',
+            'description' => 'Reikningur',
             'amount' => '250',
         ]]]);
         $files = ['afs_files_0' => [

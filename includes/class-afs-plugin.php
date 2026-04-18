@@ -24,6 +24,7 @@ class AFS_Plugin {
     }
 
     public static function register_shortcode() {
+        add_shortcode('endurgjald_form',          ['AFS_Form', 'render']);
         add_shortcode('afturgjald_form',          ['AFS_Form', 'render']);
         add_shortcode('drive_reimbursement_form', ['AFS_Form', 'render']);
     }
@@ -45,6 +46,13 @@ class AFS_Plugin {
         wp_localize_script('afs-form', 'AFS_DATA', [
             'ratePerKm' => AFS_Type_Driving::rate_per_km(),
             'tunnels'   => AFS_Type_Driving::tunnels(),
+            'placeholders' => [
+                'description' => [
+                    'driving' => 't.d Runavík til Tórshavn t/r',
+                    'expense' => 't.d Keyp av kaffi til FM í vektlyfting',
+                ],
+                'noteDriving' => 't.d Tað bleiv koyrt gjøggnum Eysturoyartunnlinum báðar vegir.',
+            ],
         ]);
     }
 
@@ -70,12 +78,12 @@ class AFS_Plugin {
     }
 
     /**
-     * Top-level "Afturgjald" menu with submenus for submissions and settings.
+     * Top-level "Endurgjald" menu with submenus for submissions and settings.
      */
     public static function register_menu() {
         add_menu_page(
-            'Afturgjald',
-            'Afturgjald',
+            'Endurgjald',
+            'Endurgjald',
             'manage_options',
             'afs-submissions',
             ['AFS_Admin_Submissions', 'render'],

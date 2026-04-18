@@ -13,7 +13,7 @@ $pass     = 0;
 $fail     = 0;
 $failures = [];
 
-fwrite(STDOUT, "Afturgjald skipan — test suite\n");
+fwrite(STDOUT, "Endurgjald skipan — test suite\n");
 fwrite(STDOUT, str_repeat('-', 60) . "\n");
 
 foreach ($tests as $t) {

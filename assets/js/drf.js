@@ -13,6 +13,8 @@
     var data     = (typeof window.AFS_DATA === 'object' && window.AFS_DATA) ? window.AFS_DATA : {};
     var rate     = typeof data.ratePerKm !== 'undefined' ? parseFloat(data.ratePerKm) : 1.60;
     var tunnels  = data.tunnels && typeof data.tunnels === 'object' ? data.tunnels : {};
+    var phDesc   = (data.placeholders && data.placeholders.description) ? data.placeholders.description : {};
+    var phNoteDr = (data.placeholders && data.placeholders.noteDriving) ? data.placeholders.noteDriving : '';
 
     function nextIndex() {
         var max = -1;
@@ -49,6 +51,20 @@
         // of its fields in bulk above).
         if (active === 'driving') {
             syncKmClaim(line);
+        }
+        syncLinePlaceholders(line);
+    }
+
+    function syncLinePlaceholders(line) {
+        var sel = line.querySelector('.afs-line__type');
+        var type = sel ? sel.value : '';
+        var desc = line.querySelector('.afs-line__desc');
+        var note = line.querySelector('.afs-line__note');
+        if (desc) {
+            desc.placeholder = (type && phDesc[type]) ? phDesc[type] : '';
+        }
+        if (note) {
+            note.placeholder = (type === 'driving' && phNoteDr) ? phNoteDr : '';
         }
     }
 

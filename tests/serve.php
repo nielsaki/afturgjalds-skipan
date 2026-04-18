@@ -37,7 +37,6 @@ require_once $root . '/includes/class-afs-mail.php';
 require_once $root . '/includes/types/class-afs-type.php';
 require_once $root . '/includes/types/class-afs-type-driving.php';
 require_once $root . '/includes/types/class-afs-type-expense.php';
-require_once $root . '/includes/types/class-afs-type-other.php';
 require_once $root . '/includes/class-afs-types.php';
 require_once $root . '/includes/class-afs-store.php';
 require_once $root . '/includes/class-afs-submission.php';
@@ -72,6 +71,13 @@ $log_content = file_exists($log_path) ? (string) file_get_contents($log_path) : 
 $js_data = json_encode([
     'ratePerKm' => AFS_Type_Driving::rate_per_km(),
     'tunnels'   => AFS_Type_Driving::tunnels(),
+    'placeholders' => [
+        'description' => [
+            'driving' => 't.d Runavík til Tórshavn t/r',
+            'expense' => 't.d Keyp av kaffi til FM í vektlyfting',
+        ],
+        'noteDriving' => 't.d Tað bleiv koyrt gjøggnum Eysturoyartunnlinum báðar vegir.',
+    ],
 ], JSON_UNESCAPED_UNICODE);
 
 $has_log     = trim($log_content) !== '';
@@ -83,7 +89,7 @@ $labels      = AFS_Store::statuses();
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Afturgjald — lokal próving</title>
+    <title>Endurgjald — lokal próving</title>
     <link rel="stylesheet" href="/assets/css/drf.css">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f0f1; margin: 0; padding: 0; color: #1d2327; }
@@ -113,7 +119,7 @@ $labels      = AFS_Store::statuses();
 </head>
 <body>
     <div class="demo-header">
-        <h1>Afturgjald skipan — lokal próving</h1>
+        <h1>Endurgjald skipan — lokal próving</h1>
         <p>
             Dry-run er á: <strong>ongin</strong> teldupostur verður sendur. Alt verður skrivað í log-kolonnuna.
             Loggfíla: <code><?php echo htmlspecialchars($log_path, ENT_QUOTES, 'UTF-8'); ?></code>

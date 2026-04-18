@@ -126,7 +126,7 @@ class AFS_Submission {
         }
 
         $total = 0.0;
-        $body  = "Nýggj fráboðan um afturgjald er móttikin:\n\n";
+        $body  = "Nýggj fráboðan um endurgjald er móttikin:\n\n";
         $body .= "Navn:            {$name}\n";
         $body .= "Teldupostur:     {$email}\n";
         if ($account !== '') {
@@ -149,7 +149,7 @@ class AFS_Submission {
         if ($first && !empty($first['date'])) { $subject_parts[] = $first['date']; }
         $subject_parts[] = $name;
         $subject_parts[] = '(' . count($lines) . ' ' . (count($lines) === 1 ? 'linja' : 'linjur') . ', ' . number_format($total, 2, ',', ' ') . ' kr)';
-        $subject = 'Afturgjald: ' . implode(' ', array_filter($subject_parts));
+        $subject = 'Endurgjald: ' . implode(' ', array_filter($subject_parts));
 
         $recipient = function_exists('apply_filters')
             ? apply_filters('afs_recipient', 'bokhald@fss.fo')
@@ -163,7 +163,7 @@ class AFS_Submission {
         $sent = AFS_Mail::send($recipient, $subject, $body, $headers, $attachments_to_send, 'Bókhald');
 
         if ($sent && $email !== '') {
-            $copy_body  = "Hetta er kvittan fyri, at tú hevur sent inn fráboðan um afturgjald:\n\n";
+            $copy_body  = "Hetta er kvittan fyri, at tú hevur sent inn fráboðan um endurgjald:\n\n";
             $copy_body .= $body;
             AFS_Mail::send($email, 'Kvittan: ' . $subject, $copy_body, [], $attachments_to_send, 'Kvittan til avsendara');
         }

@@ -93,7 +93,7 @@ class AFS_Admin_Submissions {
         $labels = AFS_Store::statuses();
 
         echo '<div class="wrap afs-admin">';
-        echo '<h1 class="wp-heading-inline">Afturgjald — fráboðanir</h1>';
+        echo '<h1 class="wp-heading-inline">Endurgjald — fráboðanir</h1>';
         echo '<hr class="wp-header-end">';
 
         if (isset($_GET['deleted'])) {

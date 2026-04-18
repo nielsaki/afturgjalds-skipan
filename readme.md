@@ -1,6 +1,6 @@
-# Afturgjald — skipan
+# Endurgjald — skipan
 
-WordPress plugin fyri at taka ímóti fráboðanum um afturgjald (koyring, útreiðslur o.a.) til FSS. Eitt submit kann hava fleiri linjur og ymisk sløg, og hvør linja kann hava eina valfría viðhefting (t.d. reikning ella kvittan).
+WordPress plugin fyri at taka ímóti fráboðanum um endurgjald (koyring og útreiðsla) til FSS. Eitt submit kann hava fleiri linjur, og hvør linja kann hava eina valfría viðhefting.
 
 ## Innihald
 
@@ -22,8 +22,7 @@ afturgjald-skipan/
 │   └── types/
 │       ├── class-afs-type.php            # abstract base
 │       ├── class-afs-type-driving.php    # Koyring (km + tunnlar)
-│       ├── class-afs-type-expense.php    # Útreiðsla (upphædd + viðhefting)
-│       └── class-afs-type-other.php      # Annað
+│       └── class-afs-type-expense.php    # Útreisðla (upphædd + viðheft skjal)
 ├── assets/
 │   ├── css/drf.css
 │   ├── css/drf-admin.css
@@ -39,15 +38,16 @@ afturgjald-skipan/
 
 ## Shortcode
 
-- `[afturgjald_form]` (nýggj) — rennur formin.
-- `[drive_reimbursement_form]` (gamal) — alias fyri sama form; er her fyri ikki at broyta eldri síður.
+- `[endurgjald_form]` — ráðlagt heiti.
+- `[afturgjald_form]` — alias (eldri síður).
+- `[drive_reimbursement_form]` — alias (eldri síður).
 
 ## Admin-síður í WordPress
 
-Tá pluginið er virkj, kemur ein nýggjur toppmenyu-triggi **Afturgjald** fram, við hesum undirsíðum:
+Tá pluginið er virkj, kemur ein nýggjur toppmenyu-triggi **Endurgjald** fram, við hesum undirsíðum:
 
-- **Afturgjald → Fráboðanir** — listi yvir allar innsendar fráboðanir.
-- **Afturgjald → Stillingar** — seta gjald pr. km og síggja próvingarloggin.
+- **Endurgjald → Fráboðanir** — listi yvir allar innsendar fráboðanir.
+- **Endurgjald → Stillingar** — seta gjald pr. km og síggja próvingarloggin.
 
 ### Fráboðanir-síðan
 
@@ -73,7 +73,7 @@ add_filter('afs_store_submission', '__return_false');
 
 ## Stillingar
 
-Innstillingar-síða: **Afturgjald → Stillingar**. Her kanst tú seta gjald pr. km og síggja log-fíluna í próvingarhami.
+Innstillingar-síða: **Endurgjald → Stillingar**. Her kanst tú seta gjald pr. km og síggja log-fíluna í próvingarhami.
 
 ## Próvingarham (lokalt / staging)
 
@@ -90,7 +90,7 @@ define('DRF_EMAIL_LOG_FILE',  WP_CONTENT_DIR . '/afs-email.log'); // valfrítt
 
 - Teldupostur verður **ikki** sendur til `bokhald@fss.fo` ella avsendara.
 - Hvør teldupostur fær ein bannara omanfyri sum sigur hvat upphavliga móttakara eitur og hvat slag av telduposti tað er (Bókhald ella Kvittan).
-- Alt verður skrivað í log-fíluna (`wp-content/uploads/afturgjald-skipan/email-test.log` sum default).
+- Alt verður skrivað í log-fíluna (`wp-content/uploads/endurgjald-skipan/email-test.log` sum default).
 - Um `DRF_EMAIL_DRY_RUN` er `true`: einki `wp_mail()` verður kallað — alt fer bert í loggin.
 
 Innstillingar-síðan vísir seinasta partin av logginum beinleiðis.
@@ -121,9 +121,9 @@ Um tú brúkar [Local](https://localwp.com/) (mappan `~/Local Sites/` varð síg
    ln -s "/Users/nielsakimork/Library/CloudStorage/Dropbox/Føroya Styrkisamband (FSS)/10 Heimasíðan/2 SelfMade_Plugins/afturgjald-skipan" \
          ~/Local\ Sites/DIN-SITE/app/public/wp-content/plugins/afturgjald-skipan
    ```
-3. Virka pluginið undir `Plugins` → `Afturgjald — skipan`.
+3. Virka pluginið undir `Plugins` → `Endurgjald — skipan`.
 4. Legg test-mode konstantirnar í `app/public/wp-config.php` (sí undir).
-5. Stovna eina síðu og set inn shortcodu `[afturgjald_form]`.
+5. Stovna eina síðu og set inn shortcodu `[endurgjald_form]` (ella ein av alias-unum).
 
 ## Automatiskar royningar (CLI)
 
@@ -231,7 +231,7 @@ Listin yvir útihaldnar fílur er í `.distignore` og í `exclude`-blokkinum í 
 
 1. Stovna pluginið í WordPress (kopjerið eina ferð manuelt ella via FTP), ella lat workflow-in gera tað fyrstu ferð.
 2. Virkja pluginið undir **Plugins**.
-3. Gagga eftir at `Afturgjald`-menuin er komin.
+3. Gagga eftir at `Endurgjald`-menuin er komin.
 4. Hereftir sendur hvør push til `main` nýggjar fílur avstað sjálvvirkandi.
 
 ### Vilt tú bert koyra tests, uttan at uppglóða?

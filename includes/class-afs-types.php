@@ -36,7 +36,6 @@ class AFS_Types {
             $types = [
                 'driving' => new AFS_Type_Driving(),
                 'expense' => new AFS_Type_Expense(),
-                'other'   => new AFS_Type_Other(),
             ];
             self::$types = function_exists('apply_filters')
                 ? apply_filters('afs_types', $types)
