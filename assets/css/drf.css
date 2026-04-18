@@ -118,8 +118,21 @@
     color: #666;
     font-weight: 400;
 }
-/* The km input paragraph is hidden with the HTML `hidden` attribute
-   when the km-claim checkbox is off. */
+/* Km field visibility: scoped !important beats many theme / framework
+   rules that hide [hidden] or random <p> in forms (fixes live site vs test). */
+.afs-wrap .afs-form p.afs-km-input.afs-km-input--collapsed,
+.afs-wrap .afs-form p.afs-km-input[hidden] {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+.afs-wrap .afs-form p.afs-km-input:not(.afs-km-input--collapsed) {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+}
 .afs-km-req[hidden] {
     display: none !important;
 }

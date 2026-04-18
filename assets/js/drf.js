@@ -5,6 +5,7 @@
     if (!form) { return; }
 
     var list     = document.getElementById('afs-lines-list');
+    if (!list) { return; }
     var addBtn   = document.getElementById('afs-add-line');
     var template = document.getElementById('afs-line-template');
     var totalEl  = document.getElementById('afs-total');
@@ -132,8 +133,19 @@
         var wrap = line.querySelector('.afs-km-input');
         var req  = line.querySelector('.afs-km-req');
         var on   = !!cb.checked;
-        // Show the km input only when the claim checkbox is ticked.
-        if (wrap) { wrap.hidden = !on; }
+        // Show the km block only when the claim checkbox is ticked. Use a
+        // class + hidden attr so aggressive theme CSS cannot leave the row
+        // invisible after unchecking [hidden] alone.
+        if (wrap) {
+            if (on) {
+                wrap.classList.remove('afs-km-input--collapsed');
+                wrap.removeAttribute('hidden');
+                wrap.style.removeProperty('display');
+            } else {
+                wrap.classList.add('afs-km-input--collapsed');
+                wrap.setAttribute('hidden', '');
+            }
+        }
         if (req)  { req.toggleAttribute('hidden', !on); }
         if (km) {
             if (on) { km.setAttribute('required', ''); }
@@ -141,20 +153,33 @@
         }
     }
 
+    function isKmClaimCheckbox(el) {
+        if (!el || !el.getAttribute) { return false; }
+        if (el.getAttribute('data-afs-km-claim') !== null) { return true; }
+        var n = el.name;
+        return typeof n === 'string' && n.indexOf('[km_claim]') !== -1;
+    }
+
     list.addEventListener('change', function (e) {
-        if (e.target && e.target.classList) {
-            if (e.target.classList.contains('afs-line__type')) {
-                var line = e.target.closest('.afs-line');
-                if (line) { toggleTypeSections(line); }
-            }
-            if (e.target.matches && e.target.matches('[data-afs-km-claim]')) {
-                var line2 = e.target.closest('.afs-line');
-                if (line2) { syncKmClaim(line2); }
-            }
+        var t = e.target;
+        if (t && t.classList && t.classList.contains('afs-line__type')) {
+            var line = t.closest('.afs-line');
+            if (line) { toggleTypeSections(line); }
+        }
+        if (isKmClaimCheckbox(t)) {
+            var line2 = t.closest('.afs-line');
+            if (line2) { syncKmClaim(line2); }
         }
         updateTotal();
     });
-    list.addEventListener('input', updateTotal);
+    list.addEventListener('input', function (e) {
+        var t = e.target;
+        if (isKmClaimCheckbox(t)) {
+            var line2 = t.closest('.afs-line');
+            if (line2) { syncKmClaim(line2); }
+        }
+        updateTotal();
+    });
     list.addEventListener('click', function (e) {
         var t = e.target;
         if (t && t.classList && t.classList.contains('afs-remove-line')) {
