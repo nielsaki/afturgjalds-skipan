@@ -57,13 +57,22 @@ class AFS_Type_Expense extends AFS_Type {
 
     public function render_form_fields($index, array $v = []) {
         $amt = isset($v['amount']) ? esc_attr($v['amount']) : '';
+        $idx = esc_attr((string) $index);
         $html  = '<div class="afs-fields afs-fields--expense">';
         $html .= '<p><label>Upphædd (kr) *<br>';
-        $html .= '<input type="number" step="0.01" min="0" name="afs_lines[' . esc_attr((string) $index) . '][amount]" value="' . $amt . '" data-afs-amount>';
+        $html .= '<input type="number" step="0.01" min="0" name="afs_lines[' . $idx . '][amount]" value="' . $amt . '" data-afs-amount>';
         $html .= '</label></p>';
-        $html .= '<p><label>Viðheft skjal (valfrítt)<br>';
-        $html .= '<input type="file" name="afs_files_' . esc_attr((string) $index) . '" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.heic,.heif">';
+        $html .= '<p class="afs-file-row"><label>Viðheft skjal (valfrítt)<br>';
+        $html .= '<input type="file" name="afs_files_' . $idx . '" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.heic,.heif">';
         $html .= '</label></p>';
+        $st_tok = isset($v['_staged_token']) ? (string) $v['_staged_token'] : '';
+        $st_nm  = isset($v['_staged_name']) ? (string) $v['_staged_name'] : '';
+        if ($st_tok !== '') {
+            $html .= '<input type="hidden" name="afs_staged[' . $idx . ']" value="' . esc_attr($st_tok) . '">';
+            if ($st_nm !== '') {
+                $html .= '<p class="afs-staged-hint" role="status"><strong>Útvalt:</strong> ' . esc_html($st_nm) . '</p>';
+            }
+        }
         $html .= '</div>';
         return $html;
     }

@@ -15,7 +15,8 @@ class AFS_Form {
 
         if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['afs_form_submitted'])) {
             $result = AFS_Submission::process($_POST, $_FILES);
-            $values = $_POST;
+            // Prefer merged values (includes afs_staged tokens for kept uploads).
+            $values = isset($result['values']) && is_array($result['values']) ? $result['values'] : $_POST;
         }
 
         ob_start();
@@ -72,12 +73,13 @@ class AFS_Form {
                         $raw_lines = (!empty($values['afs_lines']) && is_array($values['afs_lines']))
                             ? array_values($values['afs_lines'])
                             : [];
+                        $afs_st = (!empty($values['afs_staged']) && is_array($values['afs_staged'])) ? $values['afs_staged'] : [];
                         if (empty($raw_lines)) {
-                            echo self::render_line(0, []);
+                            echo self::render_line(0, [], $afs_st[0] ?? '');
                         } else {
                             foreach ($raw_lines as $i => $line) {
                                 if (!is_array($line)) { $line = []; }
-                                echo self::render_line($i, $line);
+                                echo self::render_line($i, $line, $afs_st[$i] ?? '');
                             }
                         }
                         ?>
@@ -106,7 +108,7 @@ class AFS_Form {
                 </p>
             </form>
 
-            <template id="afs-line-template"><?php echo self::render_line('__INDEX__', []); ?></template>
+            <template id="afs-line-template"><?php echo self::render_line('__INDEX__', [], ''); ?></template>
         </div>
         <?php
         return ob_get_clean();
@@ -117,9 +119,10 @@ class AFS_Form {
      *
      * @param int|string $index  Line index, or "__INDEX__" placeholder for the JS template.
      * @param array      $values Previously-submitted values for this line.
+     * @param string     $staged_token Opaque token for a kept file upload (útreiðsla), or ''.
      * @return string
      */
-    public static function render_line($index, array $values = []) {
+    public static function render_line($index, array $values = [], $staged_token = '') {
         $types    = AFS_Types::all();
         $selected = isset($values['type']) ? (string) $values['type'] : '';
         $name_idx = (string) $index;
@@ -158,8 +161,16 @@ class AFS_Form {
 
             <div class="afs-line__type-fields">
                 <?php foreach ($types as $t): ?>
-                    <div class="afs-line__type-section" data-type="<?php echo esc_attr($t->id()); ?>" <?php echo $t->id() === $selected ? '' : 'style="display:none;"'; ?>>
-                        <?php echo $t->render_form_fields($name_idx, $t->id() === $selected ? $values : []); ?>
+                    <?php
+                    $match = $t->id() === $selected;
+                    $vf    = $match ? $values : [];
+                    if ($match && $t->id() === 'expense' && $staged_token !== '' && class_exists('AFS_File_Stage')) {
+                        $vf['_staged_token'] = $staged_token;
+                        $vf['_staged_name']  = AFS_File_Stage::get_original_name($staged_token) ?: '';
+                    }
+                    ?>
+                    <div class="afs-line__type-section" data-type="<?php echo esc_attr($t->id()); ?>" <?php echo $match ? '' : 'style="display:none;"'; ?>>
+                        <?php echo $t->render_form_fields($name_idx, $vf); ?>
                     </div>
                 <?php endforeach; ?>
             </div>

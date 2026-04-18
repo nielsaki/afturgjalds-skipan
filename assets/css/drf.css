@@ -60,6 +60,13 @@
 .afs-form input[type="file"] {
     font-size: 14px;
 }
+.afs-staged-hint {
+    margin: 0.35rem 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1d2327;
+}
+.afs-staged-hint strong { font-weight: 700; }
 .afs-form input:focus,
 .afs-form textarea:focus,
 .afs-form select:focus {

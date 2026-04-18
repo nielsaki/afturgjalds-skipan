@@ -23,6 +23,7 @@ require_once $root . '/includes/types/class-afs-type.php';
 require_once $root . '/includes/types/class-afs-type-driving.php';
 require_once $root . '/includes/types/class-afs-type-expense.php';
 require_once $root . '/includes/class-afs-types.php';
+require_once $root . '/includes/class-afs-file-stage.php';
 require_once $root . '/includes/class-afs-store.php';
 require_once $root . '/includes/class-afs-submission.php';
 

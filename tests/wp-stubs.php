@@ -110,6 +110,33 @@ if (!function_exists('size_format'))   {
 }
 if (!function_exists('get_temp_dir'))  { function get_temp_dir() { return sys_get_temp_dir() . '/'; } }
 
+$GLOBALS['AFS_TEST_TRANSIENTS'] = [];
+if (!function_exists('set_transient')) {
+    function set_transient($key, $value, $ttl = 0) {
+        $GLOBALS['AFS_TEST_TRANSIENTS'][$key] = $value;
+        return true;
+    }
+}
+if (!function_exists('get_transient')) {
+    function get_transient($key) {
+        return array_key_exists($key, $GLOBALS['AFS_TEST_TRANSIENTS'])
+            ? $GLOBALS['AFS_TEST_TRANSIENTS'][$key]
+            : false;
+    }
+}
+if (!function_exists('delete_transient')) {
+    function delete_transient($key) {
+        unset($GLOBALS['AFS_TEST_TRANSIENTS'][$key]);
+        return true;
+    }
+}
+if (!function_exists('wp_generate_password')) {
+    function wp_generate_password($length = 12, $special = false, $extra = false) {
+        $len = max(8, (int) $length);
+        return substr('pw_' . bin2hex(random_bytes(32)), 0, $len);
+    }
+}
+
 if (!function_exists('wp_mail')) {
     function wp_mail($to, $subject, $body, $headers = [], $attachments = []) {
         $GLOBALS['AFS_TEST_MAILS'][] = compact('to', 'subject', 'body', 'headers', 'attachments');

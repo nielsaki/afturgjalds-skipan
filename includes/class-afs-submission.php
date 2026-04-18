@@ -70,9 +70,14 @@ class AFS_Submission {
             $result['errors'][] = 'Tú mást velja í minsta lagi eina linju.';
         }
 
-        $lines              = [];
+        $lines               = [];
         $attachments_to_send = [];
-        $tmp_copies          = [];
+        $line_attach_tokens    = [];
+        if (!empty($post['afs_staged']) && is_array($post['afs_staged'])) {
+            foreach ($post['afs_staged'] as $k => $tok) {
+                $line_attach_tokens[$k] = sanitize_text_field((string) $tok);
+            }
+        }
 
         foreach ($raw_lines as $i => $raw) {
             $type_id = sanitize_text_field($raw['type'] ?? '');
@@ -86,28 +91,48 @@ class AFS_Submission {
                 continue;
             }
 
-            $file_key = 'afs_files_' . $i;
-            if (
-                !empty($files[$file_key]) &&
-                !empty($files[$file_key]['tmp_name']) &&
-                isset($files[$file_key]['error']) &&
-                (int) $files[$file_key]['error'] === UPLOAD_ERR_OK
-            ) {
-                $orig_name = sanitize_file_name($files[$file_key]['name']);
-                $tmp_path  = self::relocate_upload(
-                    $files[$file_key]['tmp_name'],
-                    $orig_name
-                );
-                if ($tmp_path) {
-                    $att = [
-                        'name' => $orig_name,
-                        'path' => $tmp_path,
-                        'size' => (int) $files[$file_key]['size'],
-                        'type' => sanitize_text_field($files[$file_key]['type']),
-                    ];
-                    $raw['_attachment']    = $att;
-                    $attachments_to_send[] = $att;
-                    $tmp_copies[]          = $tmp_path;
+            $file_key    = 'afs_files_' . $i;
+            $prev_token  = isset($line_attach_tokens[$i]) ? (string) $line_attach_tokens[$i] : '';
+            $new_upload  = !empty($files[$file_key]['tmp_name'])
+                && isset($files[$file_key]['error'])
+                && (int) $files[$file_key]['error'] === UPLOAD_ERR_OK;
+
+            if ($type_id !== 'expense') {
+                if ($prev_token !== '') {
+                    AFS_File_Stage::delete_token($prev_token);
+                }
+                unset($line_attach_tokens[$i]);
+            } else {
+                if ($new_upload) {
+                    if ($prev_token !== '') {
+                        AFS_File_Stage::delete_token($prev_token);
+                    }
+                    $orig_name = sanitize_file_name($files[$file_key]['name']);
+                    $token     = AFS_File_Stage::persist_from_tmp(
+                        $files[$file_key]['tmp_name'],
+                        $orig_name,
+                        (int) $files[$file_key]['size'],
+                        sanitize_text_field($files[$file_key]['type'] ?? '')
+                    );
+                    if ($token) {
+                        $att = AFS_File_Stage::to_attachment_array($token);
+                        if ($att) {
+                            $raw['_attachment']    = $att;
+                            $attachments_to_send[] = $att;
+                            $line_attach_tokens[$i] = $token;
+                        }
+                    }
+                } elseif ($prev_token !== '') {
+                    $att = AFS_File_Stage::to_attachment_array($prev_token);
+                    if ($att) {
+                        $raw['_attachment']    = $att;
+                        $attachments_to_send[] = $att;
+                        $line_attach_tokens[$i] = $prev_token;
+                    } else {
+                        unset($line_attach_tokens[$i]);
+                    }
+                } else {
+                    unset($line_attach_tokens[$i]);
                 }
             }
 
@@ -121,7 +146,7 @@ class AFS_Submission {
         }
 
         if (!empty($result['errors'])) {
-            self::cleanup_tmp($tmp_copies);
+            $result['values'] = self::merge_attach_values($post, $line_attach_tokens);
             return $result;
         }
 
@@ -160,15 +185,19 @@ class AFS_Submission {
             $headers[] = 'Reply-To: ' . $email;
         }
 
-        $sent = AFS_Mail::send($recipient, $subject, $body, $headers, $attachments_to_send, 'Bókhald');
-
-        if ($sent && $email !== '') {
+        $sent_main = (bool) AFS_Mail::send($recipient, $subject, $body, $headers, $attachments_to_send, 'Bókhald');
+        $sent_copy = true;
+        if ($sent_main && $email !== '') {
             $copy_body  = "Hetta er kvittan fyri, at tú hevur sent inn fráboðan um endurgjald:\n\n";
             $copy_body .= $body;
-            AFS_Mail::send($email, 'Kvittan: ' . $subject, $copy_body, [], $attachments_to_send, 'Kvittan til avsendara');
+            $sent_copy = (bool) AFS_Mail::send($email, 'Kvittan: ' . $subject, $copy_body, [], $attachments_to_send, 'Kvittan til avsendara');
         }
+        $sent = $sent_main && $sent_copy;
 
-        self::cleanup_tmp($tmp_copies);
+        if ($sent) {
+            $done_tokens = array_unique(array_filter(array_values($line_attach_tokens)));
+            AFS_File_Stage::delete_tokens($done_tokens);
+        }
 
         $result['success']    = (bool) $sent;
         $result['sent']       = (bool) $sent;
@@ -200,45 +229,37 @@ class AFS_Submission {
         }
 
         if (!$sent) {
-            $result['errors'][] = 'Teldupostur kundi ikki sendast. Vinaliga royn aftur ella tak samband við bókhaldið.';
+            if (!$sent_main) {
+                $result['errors'][] = 'Teldupostur kundi ikki sendast. Vinaliga royn aftur ella tak samband við bókhaldið.';
+            } elseif (!$sent_copy) {
+                $result['errors'][] = 'Kvittan til tín kundi ikki sendast. Fráboðanin er móttikin; royn aftur ella tak samband við bókhaldið.';
+            }
+            $result['values'] = self::merge_attach_values($post, $line_attach_tokens);
         }
 
         return $result;
     }
 
     /**
-     * Copy or move an uploaded file to a temp location that preserves the
-     * original filename (so email attachments are named sensibly).
+     * Merge hidden `afs_staged` tokens into POST values for redisplay after errors or failed mail.
      *
-     * @param string $tmp_name
-     * @param string $orig_name
-     * @return string|null Absolute path to the new temp copy, or null on failure.
+     * @param array $post
+     * @param array $line_tokens  Map line index => opaque token
+     * @return array
      */
-    private static function relocate_upload($tmp_name, $orig_name) {
-        $tmp_dir = function_exists('get_temp_dir') ? get_temp_dir() : sys_get_temp_dir();
-        $tmp_dir = rtrim($tmp_dir, '/\\');
-        if (!is_dir($tmp_dir) || !is_writable($tmp_dir)) {
-            return null;
-        }
-        $safe = preg_replace('/[^A-Za-z0-9._-]+/', '_', $orig_name) ?: 'file.bin';
-        $new  = $tmp_dir . '/afs_' . uniqid('', true) . '_' . $safe;
-
-        if (function_exists('is_uploaded_file') && is_uploaded_file($tmp_name) && function_exists('move_uploaded_file')) {
-            if (@move_uploaded_file($tmp_name, $new)) {
-                return $new;
+    private static function merge_attach_values(array $post, array $line_tokens) {
+        $out = $post;
+        $clean = [];
+        foreach ($line_tokens as $idx => $tok) {
+            if ((string) $tok !== '') {
+                $clean[$idx] = (string) $tok;
             }
         }
-        if (@copy($tmp_name, $new)) {
-            return $new;
+        if (!empty($clean)) {
+            $out['afs_staged'] = $clean;
+        } else {
+            unset($out['afs_staged']);
         }
-        return null;
-    }
-
-    private static function cleanup_tmp(array $paths) {
-        foreach ($paths as $p) {
-            if ($p && file_exists($p)) {
-                @unlink($p);
-            }
-        }
+        return $out;
     }
 }

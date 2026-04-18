@@ -40,6 +40,7 @@ function afs_assert_str_contains($haystack, $needle, $msg = '') {
 
 function afs_reset_state() {
     $GLOBALS['AFS_TEST_MAILS'] = [];
+    $GLOBALS['AFS_TEST_TRANSIENTS'] = [];
     AFS_Logger::$test_queue = [];
     $path = AFS_Logger::log_path();
     if (file_exists($path)) { @unlink($path); }
