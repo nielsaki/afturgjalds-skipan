@@ -125,7 +125,9 @@ class AFS_Type_Driving extends AFS_Type {
         $tunnels  = self::tunnels();
         $rate     = self::rate_per_km();
         $km_val   = isset($v['km']) ? esc_attr($v['km']) : '';
-        $km_claim = empty($v) ? true : !empty($v['km_claim']);
+        // Default to unchecked — the km input only appears once the user
+        // actively ticks "Avtala um afturgjald fyri koyrdar kilometrar".
+        $km_claim = !empty($v['km_claim']);
 
         $name_idx = esc_attr((string) $index);
 
@@ -137,10 +139,10 @@ class AFS_Type_Driving extends AFS_Type {
         $html .= '<span class="afs-km-rate">(' . esc_html(number_format($rate, 2, ',', ' ')) . ' kr/km)</span>';
         $html .= '</label></p>';
 
-        $html .= '<p class="afs-km-input"><label>';
+        $html .= '<p class="afs-km-input"' . ($km_claim ? '' : ' hidden') . '><label>';
         $html .= 'Koyrdir kilometrar<span class="afs-km-req"' . ($km_claim ? '' : ' hidden') . '> *</span><br>';
         $html .= '<input type="number" step="0.1" min="0" name="afs_lines[' . $name_idx . '][km]" value="' . $km_val . '" placeholder="t.d. 12,5" data-afs-driving-km'
-              . ($km_claim ? ' required' : ' readonly')
+              . ($km_claim ? ' required' : '')
               . '>';
         $html .= '</label></p>';
 

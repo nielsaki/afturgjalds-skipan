@@ -132,15 +132,13 @@
         var wrap = line.querySelector('.afs-km-input');
         var req  = line.querySelector('.afs-km-req');
         var on   = !!cb.checked;
+        // Show the km input only when the claim checkbox is ticked.
+        if (wrap) { wrap.hidden = !on; }
+        if (req)  { req.toggleAttribute('hidden', !on); }
         if (km) {
-            // Use `readonly` rather than `disabled` so the field keeps its
-            // standard look; the server ignores km when km_claim is off.
-            km.readOnly = !on;
             if (on) { km.setAttribute('required', ''); }
             else    { km.removeAttribute('required'); }
         }
-        if (wrap) { wrap.classList.toggle('afs-km-input--off', !on); }
-        if (req)  { req.toggleAttribute('hidden', !on); }
     }
 
     list.addEventListener('change', function (e) {

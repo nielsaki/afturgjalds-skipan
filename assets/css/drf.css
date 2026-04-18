@@ -118,8 +118,8 @@
     color: #666;
     font-weight: 400;
 }
-/* When the km-claim checkbox is off, the input stays visible with the
-   same styling as every other field; it's just readonly via JS. */
+/* The km input paragraph is hidden with the HTML `hidden` attribute
+   when the km-claim checkbox is off. */
 .afs-km-req[hidden] {
     display: none !important;
 }
